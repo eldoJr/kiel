@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import Face from '../components/Face';
-import StatusPanel from '../components/StatusPanel/StatusPanel';
+import { useTheme } from '../contexts/ThemeContext';
+import Face from '../components/KielFace3D';
 import ActivityLog from '../components/ActivityLog/ActivityLog';
 import Chat from '../components/Chat/Chat';
+import Search from '../components/Search/Search';
+import Voice from '../components/Voice/Voice';
+import Settings from '../components/Settings/Settings';
+import Files from '../components/Files/Files';
 import Sidebar from '../components/Sidebar';
 import type { KielStatus, Activity, Message } from '../types/index';
 
 export default function MainLayout() {
+  const { effectiveTheme } = useTheme();
   const [status, setStatus] = useState<KielStatus>('idle');
   const [activities, setActivities] = useState<Activity[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -59,38 +64,62 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className={`min-h-screen overflow-hidden ${effectiveTheme === 'light' ? 'bg-white text-gray-900' : 'bg-black text-white'}`}>
       <Sidebar onMenuClick={(menu) => setActivePanel(activePanel === menu ? null : menu)} />
       
-      {/* Center - Face (Always visible) */}
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <Face status={status} />
-          <div className="mt-4">
-            <StatusPanel status={status} currentTask={currentTask} />
-          </div>
-        </div>
+      {/* Center - Face (Full Screen) */}
+      <div className="fixed inset-0 w-full h-full">
+        <Face status={status} />
       </div>
       
-      {/* Left Panel - Chat */}
-      {activePanel === 'edit' && (
-        <div className="fixed left-24 top-1/2 -translate-y-1/2 w-96 h-[600px] z-40">
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl h-full">
-            <Chat
-              messages={messages}
-              onSendMessage={handleSendMessage}
-              disabled={status !== 'idle'}
-            />
+      {/* Status Indicator */}
+      {currentTask && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50">
+          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-full px-6 py-3">
+            <p className="text-sm text-white/80">{currentTask}</p>
           </div>
         </div>
       )}
       
-      {/* Right Panel - Activity Log */}
+      {/* Panels */}
+      {activePanel === 'search' && (
+        <div className="fixed left-20 top-1/2 -translate-y-1/2 w-96 h-[80vh] max-h-[700px] z-50">
+          <Search onClose={() => setActivePanel(null)} />
+        </div>
+      )}
+      
+      {activePanel === 'edit' && (
+        <div className="fixed left-20 top-1/2 -translate-y-1/2 w-96 h-[80vh] max-h-[700px] z-50">
+          <Chat
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            disabled={status !== 'idle'}
+            onClose={() => setActivePanel(null)}
+          />
+        </div>
+      )}
+      
+      {activePanel === 'voice' && (
+        <div className="fixed left-20 top-1/2 -translate-y-1/2 w-96 h-[80vh] max-h-[700px] z-50">
+          <Voice onClose={() => setActivePanel(null)} />
+        </div>
+      )}
+      
+      {activePanel === 'settings' && (
+        <div className="fixed right-6 top-1/2 -translate-y-1/2 w-96 h-[80vh] max-h-[700px] z-50">
+          <Settings onClose={() => setActivePanel(null)} />
+        </div>
+      )}
+      
+      {activePanel === 'files' && (
+        <div className="fixed right-6 top-1/2 -translate-y-1/2 w-96 h-[80vh] max-h-[700px] z-50">
+          <Files onClose={() => setActivePanel(null)} />
+        </div>
+      )}
+      
       {activePanel === 'history' && (
-        <div className="fixed right-4 top-1/2 -translate-y-1/2 w-96 h-[600px] z-40">
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl h-full">
-            <ActivityLog activities={activities} />
-          </div>
+        <div className="fixed right-6 top-1/2 -translate-y-1/2 w-96 h-[80vh] max-h-[700px] z-50">
+          <ActivityLog activities={activities} onClose={() => setActivePanel(null)} />
         </div>
       )}
     </div>
